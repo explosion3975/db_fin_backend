@@ -231,7 +231,13 @@ func main() {
 		// session := sessions.Default(c)
 		id := c.PostForm("id")
 		// id := session.Get("id")
-		rows, err := db.Query("SELECT a.id,a.name,a.phone,a.address,a.age,a.job,b.receivable_sum,b.remaining_balance,a.purchase_status,b.should_get_date FROM customer_info AS a JOIN company_receivables_info AS b ON a.id = b.id WHERE a.id = ?;", id)
+		var permission string
+		rows, err := db.Query("SELECT permission FROM customer_info WHERE id=?", id)
+		checkErr(err)
+		rows.Next()
+		rows.Scan(&permission)
+		if permission == "0"{
+			rows, err := db.Query("SELECT a.id,a.name,a.phone,a.address,a.age,a.job,b.receivable_sum,b.remaining_balance,a.purchase_status,b.should_get_date FROM customer_info AS a JOIN company_receivables_info AS b ON a.id = b.id WHERE a.id = ?;", id)
 		checkErr(err)
 		var array []return_receivable
 		var tmp return_receivable
@@ -243,6 +249,21 @@ func main() {
 		// fmt.Println(id)
 		// fmt.Println(array)
 		c.JSON(200, array)
+		}else{
+			rows, err := db.Query("SELECT a.id,a.name,a.phone,a.address,a.age,a.job,b.receivable_sum,b.remaining_balance,a.purchase_status,b.should_get_date FROM customer_info AS a JOIN company_receivables_info AS b ON a.id = b.id")
+		checkErr(err)
+		var array []return_receivable
+		var tmp return_receivable
+		for rows.Next() {
+			rows.Scan(&tmp.Id, &tmp.Name, &tmp.Phone, &tmp.Address, &tmp.Age, &tmp.Job, &tmp.Total, &tmp.Remaining, &tmp.Purchase_status,&tmp.Join_date)
+			array = append(array, tmp)
+			// fmt.Print(name)
+		}
+		// fmt.Println(id)
+		// fmt.Println(array)
+		c.JSON(200, array)
+		}
+		
 	})
 	r.POST("/show_cutomer_info", func(c *gin.Context) {
 		// session := sessions.Default(c)
@@ -337,10 +358,11 @@ func main() {
 		// job := c.PostForm("occupation")
 		total := c.PostForm("amount")
 		remaining := c.PostForm("pendingAmount")
+		date := c.PostForm("dueDate")
 		// purchase_status := c.PostForm("status")
-		// fmt.Println(id,total,remaining,name)
-		db.Exec("INSERT INTO company_receivables_info (id,receivable_sum,remaining_balance,customer_name) VALUES (?,?,?,?)",
-			id,total,remaining,name,
+		// fmt.Println(id,total,remaining,name,date)
+		db.Exec("INSERT INTO company_receivables_info (id,receivable_sum,remaining_balance,customer_name,should_get_date) VALUES (?,?,?,?,?)",
+			id,total,remaining,name,date,
 	)})
 	r.POST("/create_cutomer_info",func(c *gin.Context) {
 		id := c.PostForm("idNumber")
