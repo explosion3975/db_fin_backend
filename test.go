@@ -335,7 +335,7 @@ func main() {
 
 		id := c.PostForm("idNumber")
 		supplier_id := c.PostForm("supplierId")
-		// supplier_name := c.PostForm("supplierName")
+		supplier_name := c.PostForm("supplierName")
 		supplier_contact := c.PostForm("responsible")
 		location := c.PostForm("location")
 		product_name := c.PostForm("productName")
@@ -344,6 +344,14 @@ func main() {
 		unit := c.PostForm("unit")
 		number := c.PostForm("quantity")
 		restock_date := c.PostForm("purchaseDate")
+		var s_id string
+		rows,err := db.Query("SELECT supplier_id FROM supplier_info WHERE supplier_id=?",supplier_id)
+		checkErr(err)
+		rows.Next()
+		rows.Scan(&s_id)
+		if s_id == ""{
+			db.Exec("INSERT INTO supplier_info (supplier_id,supplier_name) VALUES (?,?);",supplier_id,supplier_name)
+		}
 		//INSERT INTO company_procurement_info (id,supplier_id,supplier_contact,ordered_product,stock_location,detail,order_unit,order_number,order_unit_price,restock_date) VALUES (3,3,'contact3','product5','location000',12315,'g',1234,100.21,'2023-10-10')
 		db.Exec("INSERT INTO company_procurement_info (id,supplier_id,supplier_contact,ordered_product,stock_location,detail,order_unit,order_number,order_unit_price,restock_date) VALUES (?,?,?,?,?,?,?,?,?,?)",
 			id,supplier_id,supplier_contact,product_name,location,detail,unit,number,unit_price,restock_date,
