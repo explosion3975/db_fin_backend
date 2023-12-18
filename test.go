@@ -198,7 +198,7 @@ func main() {
 		rows.Next()
 		rows.Scan(&permission)
 		if permission == "0"{
-			rows, err := db.Query("SELECT a.supplier_id,b.supplier_id,a.supplier_contact,a.stock_location,a.ordered_product,a.detail,a.order_unit_price,a.order_unit,a.order_number,a.restock_date FROM company_procurement_info AS a JOIN supplier_info AS b ON a.supplier_id = b.supplier_id where id = ?;",id)
+			rows, err := db.Query("SELECT a.supplier_id,b.supplier_name,a.supplier_contact,a.stock_location,a.ordered_product,a.detail,a.order_unit_price,a.order_unit,a.order_number,a.restock_date FROM company_procurement_info AS a JOIN supplier_info AS b ON a.supplier_id = b.supplier_id where id = ?;",id)
 			checkErr(err)
 			var array []return_restock
 			var tmp return_restock
@@ -211,7 +211,7 @@ func main() {
 			// fmt.Println(array)
 			c.JSON(200, array)
 		}else{
-			rows, err := db.Query("SELECT a.supplier_id,b.supplier_id,a.supplier_contact,a.stock_location,a.ordered_product,a.detail,a.order_unit_price,a.order_unit,a.order_number,a.restock_date FROM company_procurement_info AS a JOIN supplier_info AS b ON a.supplier_id = b.supplier_id;")
+			rows, err := db.Query("SELECT a.supplier_id,b.supplier_name,a.supplier_contact,a.stock_location,a.ordered_product,a.detail,a.order_unit_price,a.order_unit,a.order_number,a.restock_date FROM company_procurement_info AS a JOIN supplier_info AS b ON a.supplier_id = b.supplier_id;")
 			checkErr(err)
 			var array []return_restock
 			var tmp return_restock
