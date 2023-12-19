@@ -4,17 +4,18 @@ package main
 import (
 	"database/sql"
 	"fmt"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
-	
-	// "golang.org/x/text/message"
 
+	// "golang.org/x/text/message"
+	"gin/password"
 	"time"
+
 	_ "github.com/go-sql-driver/mysql"
 )
-
 
 type return_order_track struct {
 	Id                        string `json:"idNumber"`
@@ -69,7 +70,7 @@ type return_customer_info struct {
 func main() {
 	// 初始化一个http服务对象
 	r := gin.Default()
-	r.SetTrustedProxies([]string{"140.128.101.27"})
+	r.SetTrustedProxies([]string{password.Ip})
 	// config := cors.DefaultConfig()
 	// config.AllowAllOrigins = true
 	// r.Use(cors.New(config))
@@ -97,11 +98,11 @@ func main() {
         //PartitionKey: "",
     	//})
 	r.Use(sessions.Sessions("testsession", store))
-	db, err := sql.Open("mysql", "explosion:james911113@tcp(127.0.0.1:3306)/db_fin")
+	db, err := sql.Open("mysql", password.Db_path)
 	checkErr(err)
 	// 设置一个get请求的路由，url为/ping, 处理函数（或者叫控制器函数）是一个闭包函数。
 	r.GET("/", func(c *gin.Context) {
-		//		session := sessions.Default(c)
+		//		session := sessions.Default(c)z
 		// 通过请求上下文对象Context, 直接往客户端返回一个json
 		c.JSON(200, gin.H{
 			"message": "pong",
@@ -169,7 +170,7 @@ func main() {
 				array = append(array, tmp)
 				// fmt.Print(name)
 			}
-			fmt.Println(array)
+			// fmt.Println(array)
 			c.JSON(200, array)
 		}else{
 			rows, err := db.Query("SELECT customer_info.id,customer_info.name,customer_order_records.supplier_id,customer_order_records.supplier_name,customer_order_records.ordered_product,customer_order_records.number,customer_order_records.unit,customer_order_records.unit_price,customer_order_records.order_date,customer_order_records.estimated_submission_date,customer_order_records.actual_submission_date FROM customer_info JOIN customer_order_records ON customer_info.id = customer_order_records.id")// WHERE customer_info.id = ?;
@@ -181,7 +182,7 @@ func main() {
 				array = append(array, tmp)
 				// fmt.Print(name)
 			}
-			fmt.Println(array)
+			// fmt.Println(array)
 			c.JSON(200, array)
 		}
 		
