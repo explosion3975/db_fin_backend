@@ -76,7 +76,8 @@ func main() {
 	// r.Use(cors.New(config))
 	// r.Use(cors.Default())
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"*"},
+		// AllowOrigins:     []string{"*"},
+		AllowOrigins:     []string{"https://dbf.explosion.tw"},
 		AllowMethods:     []string{"GET","POST","PUT", "PATCH","OPTIONS"},
 		AllowHeaders:     []string{"Authorization","X-Requested-With", "Content-Type", "Upgrade", "Origin",
         "Connection", "Accept-Encoding", "Accept-Language", "Host", "Access-Control-Request-Method", "Access-Control-Request-Headers",
@@ -147,14 +148,14 @@ func main() {
 			})
 		}
 	})
-	r.POST("/show_track_order", func(c *gin.Context) {
-		// session := sessions.Default(c)
-		// id := session.Get("id")
+	r.GET("/show_track_order", func(c *gin.Context) {
+		session := sessions.Default(c)
+		id := session.Get("id")
 		// id2, err := c.Cookie("id_cookie")
 		// checkErr(err)
 		// fmt.Println(id2)
-		id := c.PostForm("id")
-		// fmt.Println(id)
+		// id := c.PostForm("id")
+		fmt.Println(id)
 		var permission string
 		rows, err := db.Query("SELECT permission FROM customer_info WHERE id=?", id)
 		checkErr(err)
@@ -188,10 +189,10 @@ func main() {
 		
 
 	})
-	r.POST("/show_restock", func(c *gin.Context) {
-		// session := sessions.Default(c)
-		// id := session.Get("id")
-		id := c.PostForm("id")
+	r.GET("/show_restock", func(c *gin.Context) {
+		session := sessions.Default(c)
+		id := session.Get("id")
+		// id := c.PostForm("id")
 		// fmt.Println(id)
 		var permission string
 		rows, err := db.Query("SELECT permission FROM customer_info WHERE id=?", id)
@@ -228,10 +229,10 @@ func main() {
 		
 
 	})
-	r.POST("/show_accounts_receivable", func(c *gin.Context) {
-		// session := sessions.Default(c)
-		id := c.PostForm("id")
-		// id := session.Get("id")
+	r.GET("/show_accounts_receivable", func(c *gin.Context) {
+		session := sessions.Default(c)
+		// id := c.PostForm("id")
+		id := session.Get("id")
 		var permission string
 		rows, err := db.Query("SELECT permission FROM customer_info WHERE id=?", id)
 		checkErr(err)
@@ -266,10 +267,10 @@ func main() {
 		}
 		
 	})
-	r.POST("/show_cutomer_info", func(c *gin.Context) {
-		// session := sessions.Default(c)
-		// id := session.Get("id")
-		id := c.PostForm("id")
+	r.GET("/show_cutomer_info", func(c *gin.Context) {
+		session := sessions.Default(c)
+		id := session.Get("id")
+		// id := c.PostForm("id")
 		rows, err := db.Query("SELECT permission FROM customer_info WHERE id=?", id)
 		var permission string
 		checkErr(err)
@@ -283,7 +284,7 @@ func main() {
 		var tmp return_customer_info
 		for rows.Next() {
 			rows.Scan(&tmp.Address,&tmp.Age,&tmp.Name,&tmp.Id,&tmp.Image,&tmp.Job,&tmp.Phone,&tmp.Join_date,&tmp.Purchase_status,&tmp.Permission)
-			tmp.Image = "https://db.explosion.tw/get_customer_photo/" + tmp.Image
+			tmp.Image = password.Path + "get_customer_photo/" + tmp.Image
 			// fmt.Println(tmp.Image)
 			array = append(array, tmp)
 			// fmt.Print(name)
@@ -298,7 +299,7 @@ func main() {
 		var tmp return_customer_info
 		for rows.Next() {
 			rows.Scan(&tmp.Address,&tmp.Age,&tmp.Name,&tmp.Id,&tmp.Image,&tmp.Job,&tmp.Phone,&tmp.Join_date,&tmp.Purchase_status,&tmp.Permission)
-			tmp.Image = "https://db.explosion.tw/get_customer_photo/" + tmp.Image
+			tmp.Image = password.Path + "get_customer_photo/" + tmp.Image
 			// fmt.Println(tmp.Image)
 			array = append(array, tmp)
 			// fmt.Print(name)
@@ -313,7 +314,9 @@ func main() {
 	r.POST("/create_track_order",func(c *gin.Context){
 		//INSERT INTO customer_order_records (id,ordered_product,supplier_name,unit,order_date,estimated_submission_date,actual_submission_date,number,unit_price,order_amount,supplier_id) VALUES (?,?,?,?,?,?,?,?,?,?,?);
 		//INSERT INTO customer_order_records (id,order_id, ordered_product, supplier_name, unit, order_date, estimated_submission_date, actual_submission_date, number, unit_price, supplier_id) VALUES (?,?,?,?,?,?,?,?,?,?,?);
-		id := c.PostForm("idNumber")
+		session := sessions.Default(c)
+		id := session.Get("id")
+		// id := c.PostForm("idNumber")
 		// order_id := c.PostForm("id_order")
 		// name := c.PostForm("customerName")
 		supplier_id := c.PostForm("supplierId")
@@ -325,16 +328,27 @@ func main() {
 		order_date := c.PostForm("orderDate")
 		estimated_submission_date := c.PostForm("estSubDate")
 		actual_submission_date := c.PostForm("actSubDate")
-		stmt,err := db.Prepare("INSERT INTO customer_order_records (id, ordered_product, supplier_name, unit, order_date, estimated_submission_date, actual_submission_date, number, unit_price, supplier_id) VALUES (?,?,?,?,?,?,?,?,?,?);")
-		//stmt, err := db.Prepare("INSERT INTO customer_order_records (id,ordered_product,supplier_name,unit,order_date,estimated_submission_date,actual_submission_date,number,unit_price,supplier_id) VALUES (?,?,?,?,?,?,?,?,?,?,?);")
+		// SELECT ordered_product FROM company_procurement_info WHERE ordered_product = ?;
+		var p_name string
+		rows,err := db.Query("SELECT ordered_product FROM company_procurement_info WHERE ordered_product = ?;",product_name)
 		checkErr(err)
-		_,err = stmt.Exec(id,product_name,supplier_name,unit,order_date,estimated_submission_date,actual_submission_date,number,unit_price,supplier_id)
-
-
+		rows.Next()
+		rows.Scan(&p_name)
+		fmt.Println(id,p_name,product_name)
+		if p_name != ""{
+			fmt.Println("Success")
+			stmt,err := db.Prepare("INSERT INTO customer_order_records (id, ordered_product, supplier_name, unit, order_date, estimated_submission_date, actual_submission_date, number, unit_price, supplier_id) VALUES (?,?,?,?,?,?,?,?,?,?);")
+		//stmt, err := db.Prepare("INSERT INTO customer_order_records (id,ordered_product,supplier_name,unit,order_date,estimated_submission_date,actual_submission_date,number,unit_price,supplier_id) VALUES (?,?,?,?,?,?,?,?,?,?,?);")
+			checkErr(err)
+			_,err = stmt.Exec(id,product_name,supplier_name,unit,order_date,estimated_submission_date,actual_submission_date,number,unit_price,supplier_id)
+			checkErr(err)
+		}
+		
 	})
 	r.POST("/create_restock",func(c *gin.Context) {
-
-		id := c.PostForm("idNumber")
+		session := sessions.Default(c)
+		id := session.Get("id")
+		// id := c.PostForm("idNumber")
 		supplier_id := c.PostForm("supplierId")
 		supplier_name := c.PostForm("supplierName")
 		supplier_contact := c.PostForm("responsible")
@@ -359,7 +373,9 @@ func main() {
 	)
 	})
 	r.POST("/create_accounts_receivable",func (c *gin.Context)  {
-		id := c.PostForm("idNumber")
+		session := sessions.Default(c)
+		id := session.Get("id")
+		// id := c.PostForm("idNumber")
 		name := c.PostForm("customerName")
 		// phone := c.PostForm("phoneNumber")
 		// address := c.PostForm("address")
@@ -374,7 +390,9 @@ func main() {
 			id,total,remaining,name,date,
 	)})
 	r.POST("/create_cutomer_info",func(c *gin.Context) {
-		id := c.PostForm("idNumber")
+		// id := c.PostForm("idNumber")
+		session := sessions.Default(c)
+		id := session.Get("id")
 		address := c.PostForm("address")
 		age := c.PostForm("age")
 		name := c.PostForm("customerName")
@@ -390,7 +408,7 @@ func main() {
 		// tm := time.Unix(t, 0)
 		// time := tm.Format("20060102030405")
 		// fmt.Println(file)
-		dst := "/home/explosion/db_go/" + id
+		dst := "/home/explosion/db_go/" + id.(string)
 		// fmt.Println(dst)
 		c.SaveUploadedFile(file, dst)
 		// img := dst
@@ -399,7 +417,9 @@ func main() {
 	)
 	})
 	r.POST("/update_cutomer_info",func(c *gin.Context) {
-		id := c.PostForm("idNumber")
+		// id := c.PostForm("idNumber")
+		session := sessions.Default(c)
+		id := session.Get("id")
 		address := c.PostForm("address")
 		// age := c.PostForm("age")
 		// name := c.PostForm("customerName")
@@ -415,7 +435,9 @@ func main() {
 	)
 	})
 	r.POST("/update_accounts_receivable",func(c *gin.Context) {
-		id := c.PostForm("idNumber")
+		// id := c.PostForm("idNumber")
+		session := sessions.Default(c)
+		id := session.Get("id")
 		name := c.PostForm("customerName")
 		// phone := c.PostForm("phoneNumber")
 		// address := c.PostForm("address")
@@ -427,8 +449,10 @@ func main() {
 			total,remaining,name,id,
 	)
 	})
-	r.POST("/is_admin",func(c *gin.Context) {
-		id := c.PostForm("id")
+	r.GET("/is_admin",func(c *gin.Context) {
+		// id := c.PostForm("id")
+		session := sessions.Default(c)
+		id := session.Get("id")
 		var permission string
 		rows, err := db.Query("SELECT permission FROM customer_info WHERE id=?", id)
 		checkErr(err)
@@ -456,7 +480,7 @@ func main() {
 		// 使用c.File将照片发送给前端
 		c.File(imagePath)
 	})
-	r.Run(":8080") // 监听并在 0.0.0.0:8080 上启动服务
+	r.Run(password.Ip) // 监听并在 0.0.0.0:8080 上启动服务
 }
 func checkErr(err error) {
 	if err != nil {
@@ -485,18 +509,18 @@ func checkErr(err error) {
 //     }
 // }
 
-func CORSMiddleware() gin.HandlerFunc {
-    return func(c *gin.Context) {
-        c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-        c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-        c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
-        c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
+// func CORSMiddleware() gin.HandlerFunc {
+//     return func(c *gin.Context) {
+//         c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+//         c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+//         c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With")
+//         c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT")
 
-        if c.Request.Method == "OPTIONS" {
-            c.AbortWithStatus(204)
-            return
-        }
+//         if c.Request.Method == "OPTIONS" {
+//             c.AbortWithStatus(204)
+//             return
+//         }
 
-        c.Next()
-    }
-}
+//         c.Next()
+//     }
+// }
